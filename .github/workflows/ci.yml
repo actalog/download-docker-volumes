@@ -15,10 +15,10 @@ jobs:
           timeout 60 bash -c 'until nc -z localhost 2222; do sleep 2; done'
           sleep 5
       - uses: ./
-        env:
-          HOST: localhost
-          USERNAME: root
-          PASSWORD: testpassword
-          PORT: 2222
+        with:
+          host: localhost
+          username: root
+          password: testpassword
+          port: 2222
       - if: always()
         run: docker compose -f compose.test.yaml down

@@ -5,15 +5,30 @@ branding:
   icon: download
   color: blue
 
+inputs:
+  host:
+    description: 'SSH server host'
+    required: true
+  username:
+    description: 'SSH username'
+    required: true
+  password:
+    description: 'SSH password'
+    required: true
+  port:
+    description: 'SSH port'
+    required: false
+    default: '22'
+
 runs:
   using: composite
   steps:
     - uses: appleboy/ssh-action@v1.2.0
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+        port: ${{ inputs.port }}
         script: |
           #!/bin/bash
           set -e
@@ -31,19 +46,19 @@ runs:
           fi
     - uses: appleboy/scp-action@v0.1.7
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+        port: ${{ inputs.port }}
         source: "/tmp/docker-volumes-*.tar.gz"
         target: "./"
         strip_components: 2
     - uses: appleboy/ssh-action@v1.2.0
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+        port: ${{ inputs.port }}
         script: |
           #!/bin/bash
           echo "Cleaning up backup files..."
