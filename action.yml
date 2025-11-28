@@ -30,29 +30,22 @@ runs:
         password: ${{ inputs.password }}
         port: ${{ inputs.port }}
         script: |
-          #!/bin/bash
           set -e
-          
-          BACKUP_FILE="/tmp/docker-volumes-$(date +%Y%m%d_%H%M%S).tar.gz"
-          VOLUMES_PATH="/var/lib/docker/volumes"
-          
-          if [ -d "$VOLUMES_PATH" ]; then
-            echo "Compressing Docker volumes..."
-            tar -czf "$BACKUP_FILE" -C "$VOLUMES_PATH" .
-            echo "Backup created: $BACKUP_FILE"
-          else
-            echo "Volumes directory not found: $VOLUMES_PATH"
-            exit 1
-          fi
-    - uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ inputs.host }}
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-        port: ${{ inputs.port }}
-        source: "/tmp/docker-volumes-*.tar.gz"
-        target: "./"
-        strip_components: 2
+          tar -czf "/tmp/docker-volumes-$(date +%Y%m%d_%H%M%S).tar.gz" -C "/var/lib/docker/volumes" .
+          ls -t /tmp/docker-volumes-*.tar.gz | head -1 > /tmp/backup-path.txt
+          echo "Backup created: $(cat /tmp/backup-path.txt)"
+    - shell: bash
+      run: |
+        set -e
+        sudo apt-get update -qq && sudo apt-get install -y sshpass
+        
+        BACKUP_FILE=$(sshpass -p "${{ inputs.password }}" ssh -p ${{ inputs.port }} -o StrictHostKeyChecking=no \
+          ${{ inputs.username }}@${{ inputs.host }} "cat /tmp/backup-path.txt")
+        
+        sshpass -p "${{ inputs.password }}" scp -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
+          ${{ inputs.username }}@${{ inputs.host }}:"$BACKUP_FILE" ./
+        
+        echo "Downloaded: $(basename $BACKUP_FILE)"
     - uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ inputs.host }}
@@ -60,7 +53,5 @@ runs:
         password: ${{ inputs.password }}
         port: ${{ inputs.port }}
         script: |
-          #!/bin/bash
-          echo "Cleaning up backup files..."
-          rm -f /tmp/docker-volumes-*.tar.gz
+          rm -f /tmp/docker-volumes-*.tar.gz /tmp/backup-path.txt
           echo "Cleanup completed"
