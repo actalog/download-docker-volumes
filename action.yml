@@ -46,6 +46,11 @@ runs:
           ${{ inputs.username }}@${{ inputs.host }}:"$BACKUP_FILE" ./
         
         echo "Downloaded: $(basename $BACKUP_FILE)"
+    - uses: actions/upload-artifact@v4
+      with:
+        name: docker-volumes-backup
+        path: docker-volumes-*.tar.gz
+        retention-days: 7
     - uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ inputs.host }}
