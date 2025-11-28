@@ -1,0 +1,51 @@
+name: '@actalog/download-docker-volumes'
+description: 'Download docker volumes'
+author: Gabriel Rufino <contato@gabrielrufino.com>
+branding:
+  icon: download
+  color: blue
+
+runs:
+  using: composite
+  steps:
+    - uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          #!/bin/bash
+          set -e
+          
+          BACKUP_FILE="/tmp/docker-volumes-$(date +%Y%m%d_%H%M%S).tar.gz"
+          VOLUMES_PATH="/var/lib/docker/volumes"
+          
+          if [ -d "$VOLUMES_PATH" ]; then
+            echo "Compressing Docker volumes..."
+            tar -czf "$BACKUP_FILE" -C "$VOLUMES_PATH" .
+            echo "Backup created: $BACKUP_FILE"
+          else
+            echo "Volumes directory not found: $VOLUMES_PATH"
+            exit 1
+          fi
+    - uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        source: "/tmp/docker-volumes-*.tar.gz"
+        target: "./"
+        strip_components: 2
+    - uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          #!/bin/bash
+          echo "Cleaning up backup files..."
+          rm -f /tmp/docker-volumes-*.tar.gz
+          echo "Cleanup completed"

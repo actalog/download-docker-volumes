@@ -1,0 +1,10 @@
+services:
+  docker-ssh:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    privileged: true
+    ports:
+      - 2222:22
+    environment:
+      - DOCKER_TLS_CERTDIR=
