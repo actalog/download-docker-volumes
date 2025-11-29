@@ -1,0 +1,65 @@
+name: '@actalog/download-docker-volumes'
+description: 'Download docker volumes'
+author: Gabriel Rufino <contato@gabrielrufino.com>
+branding:
+  icon: download
+  color: blue
+
+inputs:
+  host:
+    description: 'SSH server host'
+    required: true
+  username:
+    description: 'SSH username'
+    required: true
+  password:
+    description: 'SSH password'
+    required: true
+  port:
+    description: 'SSH port'
+    required: false
+    default: '22'
+  volumes-path:
+    description: 'Docker volumes directory path'
+    required: false
+    default: '/var/lib/docker/volumes'
+  artifact-retention-days:
+    description: 'Number of days to retain the artifact'
+    required: false
+    default: '7'
+  backup-password:
+    description: 'Password to protect the backup file'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -e
+        echo "::add-mask::${{ inputs.password }}"
+        echo "::add-mask::${{ inputs.username }}"
+        echo "::add-mask::${{ inputs.host }}"
+        echo "::add-mask::${{ inputs.port }}"
+        echo "::add-mask::${{ inputs.backup-password }}"
+
+        # Define variables
+        VOLUMES_DIR="docker-volumes"
+        BACKUP_FILE="docker-volumes-backup.zip"
+        PASSWORD="${{ inputs.backup-password }}"
+
+        sshpass -p "${{ inputs.password }}" scp -r -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
+          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
+
+        zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
+        rm -rf "$VOLUMES_DIR"
+    - uses: actions/upload-artifact@v4
+      with:
+        name: docker-volumes-backup
+        path: docker-volumes-backup.zip
+        retention-days: ${{ inputs.artifact-retention-days }}
+    - if: always()
+      shell: bash
+      run: |
+        rm -f ~/.ssh/known_hosts
+        echo "SSH known_hosts cleaned"
