@@ -34,27 +34,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: appleboy/ssh-action@v1.2.4
-      with:
-        host: ${{ inputs.host }}
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-        port: ${{ inputs.port }}
-        timeout: 60s
-        script: |
-          set -euo pipefail
-
-          VOLUMES_PATH="${{ inputs.volumes-path }}"
-          if [ ! -d "$VOLUMES_PATH" ]; then
-            echo "Error: Directory $VOLUMES_PATH not found"
-            exit 1
-          fi
-
-          PASSWORD="${{ inputs.backup-password }}"
-
-          BACKUP_FILE="/tmp/docker-volumes-backup.zip"
-          zip -P "$PASSWORD" "$BACKUP_FILE" -r "$VOLUMES_PATH"
-          echo "Backup created with password protection: $BACKUP_FILE"
     - shell: bash
       run: |
         set -e
