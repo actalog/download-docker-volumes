@@ -20,5 +20,6 @@ jobs:
           username: root
           password: testpassword
           port: 2222
+          backup-password: backuppassword
       - if: always()
         run: docker compose -f compose.test.yaml down
