@@ -58,28 +58,25 @@ runs:
     - shell: bash
       run: |
         set -e
-        sudo apt-get update -q && sudo apt-get install -y sshpass
-        
-        BACKUP_FILE="/tmp/docker-volumes-backup.zip"
+        sudo apt-get update -q && sudo apt-get install -y sshpass zip
 
-        sshpass -p "${{ inputs.password }}" scp -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
-          ${{ inputs.username }}@${{ inputs.host }}:"$BACKUP_FILE" ./
-        
-        echo "Downloaded: $(basename $BACKUP_FILE)"
+        # Define variables
+        VOLUMES_DIR="docker-volumes"
+        BACKUP_FILE="docker-volumes-backup.zip"
+        PASSWORD="${{ inputs.backup-password }}"
+
+        sshpass -p "${{ inputs.password }}" scp -r -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
+          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
+
+        zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
+        echo "Backup created: $BACKUP_FILE"
+
+        rm -rf "$VOLUMES_DIR"
     - uses: actions/upload-artifact@v4
       with:
         name: docker-volumes-backup
-        path: docker-volumes-*.tar.gz
+        path: docker-volumes-backup.zip
         retention-days: ${{ inputs.artifact-retention-days }}
-    - uses: appleboy/ssh-action@v1.2.4
-      with:
-        host: ${{ inputs.host }}
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-        port: ${{ inputs.port }}
-        script: |
-          rm -f /tmp/docker-volumes-*.tar.gz /tmp/backup-path.txt
-          echo "Cleanup completed"
     - if: always()
       shell: bash
       run: |
