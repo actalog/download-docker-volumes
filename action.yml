@@ -37,6 +37,7 @@ runs:
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
         port: ${{ inputs.port }}
+        timeout: 60s
         script: |
           set -euo pipefail
 
@@ -46,17 +47,16 @@ runs:
             exit 1
           fi
 
-          BACKUP_FILE="/tmp/docker-volumes-$(date +%Y%m%d_%H%M%S).tar.gz"
+          BACKUP_FILE="/tmp/docker-volumes-backup.tar.gz"
           tar -czf "$BACKUP_FILE" -C "$VOLUMES_PATH" .
           echo "Backup created: $BACKUP_FILE"
-          echo "::set-output name=backup-path::$BACKUP_FILE"
     - shell: bash
       run: |
         set -e
         sudo apt-get update -qq && sudo apt-get install -y sshpass
         
-        BACKUP_FILE="${{ steps.create-backup.outputs.backup-path }}"
-        
+        BACKUP_FILE="/tmp/docker-volumes-backup.tar.gz"
+
         sshpass -p "${{ inputs.password }}" scp -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
           ${{ inputs.username }}@${{ inputs.host }}:"$BACKUP_FILE" ./
         

@@ -2,8 +2,7 @@ FROM docker:dind
 
 RUN apk add --no-cache \
     openssh \
-    openssh-server \
-    bash
+    openssh-server
 
 RUN ssh-keygen -A && \
     mkdir -p /run/sshd && \
@@ -11,15 +10,12 @@ RUN ssh-keygen -A && \
     sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
+EXPOSE 22
+
 RUN mkdir -p /var/lib/docker/volumes/test-volume/_data && \
     echo "test data" > /var/lib/docker/volumes/test-volume/_data/test.txt
 
-EXPOSE 22
+COPY entrypoint.test.sh /entrypoint.test.sh
+RUN chmod +x /entrypoint.test.sh
 
-RUN printf '#!/bin/sh\n\
-dockerd-entrypoint.sh &\n\
-sleep 5\n\
-/usr/sbin/sshd -D\n' > /start.sh && \
-    chmod +x /start.sh
-
-CMD ["/start.sh"]
+ENTRYPOINT ["/entrypoint.test.sh"]
