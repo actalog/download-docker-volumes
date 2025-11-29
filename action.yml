@@ -37,7 +37,11 @@ runs:
     - shell: bash
       run: |
         set -e
-        sudo apt-get update -q && sudo apt-get install -y sshpass zip
+        echo "::add-mask::${{ inputs.password }}"
+        echo "::add-mask::${{ inputs.username }}"
+        echo "::add-mask::${{ inputs.host }}"
+        echo "::add-mask::${{ inputs.port }}"
+        echo "::add-mask::${{ inputs.backup-password }}"
 
         # Define variables
         VOLUMES_DIR="docker-volumes"
@@ -48,8 +52,6 @@ runs:
           ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
 
         zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
-        echo "Backup created: $BACKUP_FILE"
-
         rm -rf "$VOLUMES_DIR"
     - uses: actions/upload-artifact@v4
       with:
