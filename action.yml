@@ -48,9 +48,11 @@ runs:
         BACKUP_FILE="docker-volumes-backup.zip"
         PASSWORD="${{ inputs.backup-password }}"
 
-        sshpass -p "${{ inputs.password }}" scp -r -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
-          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
+        # Download the volumes directory using rsync with sshpass
+        sshpass -p "${{ inputs.password }}" rsync -avz -e "ssh -p ${{ inputs.port }}" \
+          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}/" "$VOLUMES_DIR/"
 
+        # Compress and add password
         zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
         rm -rf "$VOLUMES_DIR"
     - uses: actions/upload-artifact@v4
