@@ -37,6 +37,8 @@ runs:
     - shell: bash
       run: |
         set -e
+        sudo apt-get update -q && sudo apt-get install -y sshpass
+
         echo "::add-mask::${{ inputs.password }}"
         echo "::add-mask::${{ inputs.username }}"
         echo "::add-mask::${{ inputs.host }}"
@@ -48,9 +50,14 @@ runs:
         BACKUP_FILE="docker-volumes-backup.zip"
         PASSWORD="${{ inputs.backup-password }}"
 
-        sshpass -p "${{ inputs.password }}" scp -r -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
-          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
+        # Download the volumes directory using rsync
+        sshpass -p "${{ inputs.password }}" \
+          rsync \
+            -avzP \
+            -e "ssh -p ${{ inputs.port }} -o StrictHostKeyChecking=no" \
+            ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}/" "$VOLUMES_DIR/"
 
+        # Compress and add password
         zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
         rm -rf "$VOLUMES_DIR"
     - uses: actions/upload-artifact@v4

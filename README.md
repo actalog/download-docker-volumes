@@ -6,10 +6,15 @@ GitHub Action designed to securely download Docker volumes from a remote server 
 
 ## Features
 
-- Downloads Docker volumes from a remote server using `scp`.
+- Downloads Docker volumes from a remote server using `rsync` over SSH.
 - Compresses the volumes into a password-protected `.zip` file.
 - Uploads the backup as an artifact for later retrieval.
 - Masks sensitive inputs (e.g., passwords) to ensure security.
+- Cleans up SSH known_hosts after execution to avoid key conflicts.
+
+## Requirements
+
+- The remote server must have `rsync` installed for the transfer to work.
 
 ## Inputs
 
