@@ -2,7 +2,8 @@ FROM docker:dind
 
 RUN apk add --no-cache \
     openssh \
-    openssh-server
+    openssh-server \
+    rsync
 
 RUN ssh-keygen -A && \
     mkdir -p /run/sshd && \
