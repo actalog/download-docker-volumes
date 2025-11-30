@@ -30,11 +30,25 @@ inputs:
   backup-password:
     description: 'Password to protect the backup file'
     required: true
+  upload-mode:
+    description: 'Upload mode: "artifact" to upload as GitHub artifact, "local" to save on the runner'
+    required: false
+    default: 'artifact'
+  local-path:
+    description: 'Local path to save the backup file when upload-mode is "local"'
+    required: false
+    default: '/tmp/docker-volumes-backup.zip'
+
+outputs:
+  backup-path:
+    description: 'Path to the backup file (artifact name or local path)'
+    value: ${{ steps.backup.outputs.backup-path }}
 
 runs:
   using: composite
   steps:
-    - shell: bash
+    - id: backup
+      shell: bash
       run: |
         set -e
         sudo apt-get update -q && sudo apt-get install -y sshpass
@@ -47,7 +61,11 @@ runs:
 
         # Define variables
         VOLUMES_DIR="docker-volumes"
-        BACKUP_FILE="docker-volumes-backup.zip"
+        if [ "${{ inputs.upload-mode }}" = "local" ]; then
+          BACKUP_FILE="${{ inputs.local-path }}"
+        else
+          BACKUP_FILE="docker-volumes-backup.zip"
+        fi
         PASSWORD="${{ inputs.backup-password }}"
 
         # Download the volumes directory using rsync
@@ -60,7 +78,11 @@ runs:
         # Compress and add password
         zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
         rm -rf "$VOLUMES_DIR"
-    - uses: actions/upload-artifact@v4
+
+        # Set output
+        echo "::set-output name=backup-path::$BACKUP_FILE"
+    - if: inputs.upload-mode == 'artifact'
+      uses: actions/upload-artifact@v4
       with:
         name: docker-volumes-backup
         path: docker-volumes-backup.zip
