@@ -50,9 +50,12 @@ runs:
         BACKUP_FILE="docker-volumes-backup.zip"
         PASSWORD="${{ inputs.backup-password }}"
 
-        # Download the volumes directory using scp
-        sshpass -p "${{ inputs.password }}" scp -r -P ${{ inputs.port }} -o StrictHostKeyChecking=no \
-          ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}" "$VOLUMES_DIR"
+        # Download the volumes directory using rsync
+        sshpass -p "${{ inputs.password }}" \
+          rsync \
+            -avzP \
+            -e "ssh -p ${{ inputs.port }} -o StrictHostKeyChecking=no" \
+            ${{ inputs.username }}@${{ inputs.host }}:"${{ inputs.volumes-path }}/" "$VOLUMES_DIR/"
 
         # Compress and add password
         zip -P "$PASSWORD" -r "$BACKUP_FILE" "$VOLUMES_DIR"
