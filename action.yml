@@ -24,7 +24,7 @@ inputs:
     required: false
     default: '/var/lib/docker/volumes'
   artifact-retention-days:
-    description: 'Number of days to retain the artifact'
+    description: 'Number of days to retain the artifact (only applicable when upload-mode is `artifact`)'
     required: false
     default: '7'
   backup-password:
@@ -41,7 +41,7 @@ inputs:
 
 outputs:
   backup-path:
-    description: 'Path to the backup file (artifact name or local path)'
+    description: 'Backup file path: in "artifact" mode, the local filename ("docker-volumes-backup.zip"); in "local" mode, the full local path.'
     value: ${{ steps.backup.outputs.backup-path }}
 
 runs:
@@ -79,12 +79,12 @@ runs:
         rm -rf "$VOLUMES_DIR"
 
         # Set output
-        echo "::set-output name=backup-path::$BACKUP_FILE"
+        echo "backup-path=$BACKUP_FILE" >> $GITHUB_OUTPUT
     - if: inputs.upload-mode == 'artifact'
       uses: actions/upload-artifact@v4
       with:
         name: docker-volumes-backup
-        path: docker-volumes-backup.zip
+        path: ${{ steps.backup.outputs.backup-path }}
         retention-days: ${{ inputs.artifact-retention-days }}
     - if: always()
       shell: bash

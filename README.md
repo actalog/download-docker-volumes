@@ -16,28 +16,29 @@ GitHub Action designed to securely download Docker volumes from a remote server 
 
 ## Requirements
 
+- The runner must have `sshpass` installed for SSH password authentication to work.
 - The remote server must have `rsync` installed for the transfer to work.
 - For local mode, use a self-hosted runner to access the saved file.
 
 ## Inputs
 
-| Name                     | Description                                      | Required | Default                     |
-|--------------------------|--------------------------------------------------|----------|-----------------------------|
-| `host`                   | SSH server host                                  | `true`   |                             |
-| `username`               | SSH username                                     | `true`   |                             |
-| `password`               | SSH password                                     | `true`   |                             |
-| `port`                   | SSH port                                         | `false`  | `22`                        |
-| `volumes-path`           | Path to the Docker volumes directory on server   | `false`  | `/var/lib/docker/volumes`   |
-| `artifact-retention-days`| Number of days to retain the artifact            | `false`  | `7`                         |
-| `backup-password`        | Password to protect the backup file              | `true`   |                             |
-| `upload-mode`            | Upload mode: "artifact" or "local"               | `false`  | `artifact`                  |
+| Name                     | Description                                      | Required | Default                          |
+|--------------------------|--------------------------------------------------|----------|--------------------------------- |
+| `host`                   | SSH server host                                  | `true`   |                                  |
+| `username`               | SSH username                                     | `true`   |                                  |
+| `password`               | SSH password                                     | `true`   |                                  |
+| `port`                   | SSH port                                         | `false`  | `22`                             |
+| `volumes-path`           | Path to the Docker volumes directory on server   | `false`  | `/var/lib/docker/volumes`        |
+| `artifact-retention-days`| Number of days to retain the artifact (only applicable in artifact mode) | `false`  | `7`      |
+| `backup-password`        | Password to protect the backup file              | `true`   |                                  |
+| `upload-mode`            | Upload mode: "artifact" or "local"               | `false`  | `artifact`                       |
 | `local-path`             | Local path to save the backup when mode is local | `false`  | `/tmp/docker-volumes-backup.zip` |
 
 ## Outputs
 
-| Name          | Description                          |
-|---------------|--------------------------------------|
-| `backup-path` | Path to the backup file (artifact name or local path) |
+| Name          | Description                                                                                      |
+|---------------|------------------------------------------------------------------------------------------------- |
+| `backup-path` | Path to the backup file on the runner (local filename in artifact mode, full path in local mode) |
 
 ## Example Usage
 
