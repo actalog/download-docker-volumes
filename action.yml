@@ -51,7 +51,6 @@ runs:
       shell: bash
       run: |
         set -e
-        sudo apt-get update -q && sudo apt-get install -y sshpass
 
         echo "::add-mask::${{ inputs.password }}"
         echo "::add-mask::${{ inputs.username }}"
